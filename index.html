@@ -1428,53 +1428,99 @@
         
         // 初始化事件监听
         function initEventListeners() {
+            console.log('Initializing event listeners...');
+            
             // 键盘控制
             document.addEventListener('keydown', handleKeyDown);
             
-            // 按钮控制 - 确保元素存在再绑定事件
-            if (startButton) {
-                startButton.addEventListener('click', initGame);
-                console.log('Start button event listener added');
-            }
-            if (restartButton) {
-                restartButton.addEventListener('click', initGame);
-            }
-            if (pauseButton) {
-                pauseButton.addEventListener('click', pauseGame);
-            }
-            if (resumeButton) {
-                resumeButton.addEventListener('click', resumeGame);
-            }
+            // 按钮控制 - 使用更可靠的事件绑定方式
+            document.getElementById('start-button')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Start button clicked');
+                initGame();
+            });
+            
+            document.getElementById('restart-button')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Restart button clicked');
+                initGame();
+            });
+            
+            document.getElementById('pause-button')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Pause button clicked');
+                pauseGame();
+            });
+            
+            document.getElementById('resume-button')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Resume button clicked');
+                resumeGame();
+            });
+            
+            document.getElementById('settings-button')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Settings button clicked');
+                startScreen.classList.remove('hidden');
+                gameOverScreen.classList.add('hidden');
+            });
+            
+            document.getElementById('settings-toggle')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Settings toggle clicked');
+                inGameSettingsScreen.classList.remove('hidden');
+                pauseGame();
+            });
+            
+            document.getElementById('resume-game')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Resume game button clicked');
+                inGameSettingsScreen.classList.add('hidden');
+                resumeGame();
+            });
+            
+            document.getElementById('restart-game')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Restart game button clicked');
+                inGameSettingsScreen.classList.add('hidden');
+                initGame();
+            });
+            
+            document.getElementById('sound-toggle')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Sound toggle clicked');
+                soundEnabled = !soundEnabled;
+                this.innerHTML = soundEnabled ? '<i class="fa fa-volume-up"></i>' : '<i class="fa fa-volume-off"></i>';
+            });
             
             // 移动设备触摸控制
-            if (upBtn) {
-                upBtn.addEventListener('click', () => {
-                    if (direction !== 'down') {
-                        nextDirection = 'up';
-                    }
-                });
-            }
-            if (leftBtn) {
-                leftBtn.addEventListener('click', () => {
-                    if (direction !== 'right') {
-                        nextDirection = 'left';
-                    }
-                });
-            }
-            if (rightBtn) {
-                rightBtn.addEventListener('click', () => {
-                    if (direction !== 'left') {
-                        nextDirection = 'right';
-                    }
-                });
-            }
-            if (downBtn) {
-                downBtn.addEventListener('click', () => {
-                    if (direction !== 'up') {
-                        nextDirection = 'down';
-                    }
-                });
-            }
+            document.getElementById('up-btn')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (direction !== 'down') {
+                    nextDirection = 'up';
+                }
+            });
+            
+            document.getElementById('left-btn')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (direction !== 'right') {
+                    nextDirection = 'left';
+                }
+            });
+            
+            document.getElementById('right-btn')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (direction !== 'left') {
+                    nextDirection = 'right';
+                }
+            });
+            
+            document.getElementById('down-btn')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (direction !== 'up') {
+                    nextDirection = 'down';
+                }
+            });
             
             // 触摸滑动控制
             let touchStartX, touchStartY;
@@ -1521,6 +1567,40 @@
                 }, { passive: false });
             }
             
+            // 皮肤选择功能
+            document.querySelectorAll('.skin-option').forEach(option => {
+                option.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const skin = this.dataset.skin;
+                    if (skin) {
+                        console.log('Selected skin:', skin);
+                        snakeSkin = skin;
+                        
+                        // 更新选中状态
+                        document.querySelectorAll('.skin-option').forEach(opt => {
+                            opt.classList.remove('selected');
+                        });
+                        
+                        // 选中当前皮肤的所有实例
+                        document.querySelectorAll(`[data-skin="${skin}"]`).forEach(opt => {
+                            opt.classList.add('selected');
+                        });
+                    }
+                });
+            });
+            
+            // 复制链接功能
+            document.getElementById('copy-link')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                const currentUrl = window.location.href;
+                navigator.clipboard.writeText(currentUrl).then(() => {
+                    alert('游戏链接已复制到剪贴板！');
+                }).catch(err => {
+                    console.error('复制失败:', err);
+                    alert('复制失败，请手动复制链接。');
+                });
+            });
+            
             // 窗口大小变化时重新调整画布
             window.addEventListener('resize', () => {
                 initCanvas();
@@ -1532,24 +1612,21 @@
         function init() {
             console.log('Initializing game...');
             // 确保DOM元素已经加载
-            if (!canvas || !startButton) {
-                console.error('Required DOM elements not found!');
+            if (!canvas) {
+                console.error('Canvas element not found!');
                 return;
             }
             
             initCanvas();
-            highScoreElement.textContent = highScore;
+            if (highScoreElement) {
+                highScoreElement.textContent = highScore;
+            }
             initEventListeners();
             
-            // 额外添加直接的点击处理，确保按钮能响应
-            setTimeout(() => {
-                if (startButton) {
-                    startButton.onclick = function() {
-                        console.log('Start button clicked directly');
-                        initGame();
-                    };
-                }
-            }, 100);
+            // 显示开始界面
+            if (startScreen) {
+                startScreen.classList.remove('hidden');
+            }
         }
         
         // 启动游戏 - 使用DOMContentLoaded确保DOM完全加载
